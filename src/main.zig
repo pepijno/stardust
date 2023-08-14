@@ -14,13 +14,12 @@ pub fn main() !void {
     const basic_ansi = try Style.init(.{.Bold}).print(allocator, "Basic ANSI Colors\n");
     try stdout.writeAll(basic_ansi);
 
-    var i: u16 = 0;
-    while (i < 16) : (i += 1) {
+    for (0..16) |i| {
         if (i % 8 == 0) {
             try stdout.writeAll("\n");
         }
 
-        const background = Color{ .ansi_color = .{ .color = @intCast(u8, i) } };
+        const background = Color{ .ansi_color = .{ .color = @intCast(i) } };
 
         var style = Style.init(.{}).addBackground(background);
         if (i < 5) {
@@ -40,13 +39,12 @@ pub fn main() !void {
     const ansi_256 = try Style.init(.{.Bold}).print(allocator, "Extended ANSI Colors\n");
     try stdout.writeAll(ansi_256);
 
-    i = 16;
-    while (i < 232) : (i += 1) {
+    for (16..232) |i| {
         if ((i - 16) % 6 == 0) {
             try stdout.writeAll("\n");
         }
 
-        const background = Color{ .ansi256_color = .{ .color = @intCast(u8, i) } };
+        const background = Color{ .ansi256_color = .{ .color = @intCast(i) } };
 
         var style = Style.init(.{}).addBackground(background);
         if (i < 28) {
@@ -66,13 +64,12 @@ pub fn main() !void {
     const ansi_grayscale = try Style.init(.{.Bold}).print(allocator, "Extended ANSI Grayscale\n");
     try stdout.writeAll(ansi_grayscale);
 
-    i = 232;
-    while (i < 256) : (i += 1) {
+    for (232..256) |i| {
         if ((i - 16) % 6 == 0) {
             try stdout.writeAll("\n");
         }
 
-        const background = Color{ .ansi256_color = .{ .color = @intCast(u8, i) } };
+        const background = Color{ .ansi256_color = .{ .color = @intCast(i) } };
 
         var style = Style.init(.{}).addBackground(background);
         if (i < 244) {

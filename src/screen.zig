@@ -189,8 +189,7 @@ pub fn Output(comptime Writer: type) type {
             const clear_line_str = constants.CSI ++ erase_entire_line;
             const cursor_up_str = constants.CSI ++ cursor_up_one_line;
             try self.writer().writeAll(clear_line_str);
-            var i: usize = 0;
-            while (i < n) : (i += 1) {
+            for (0..n) |_| {
                 try self.writer().writeAll(cursor_up_str ++ clear_line_str);
             }
         }
