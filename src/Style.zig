@@ -91,10 +91,8 @@ pub fn print(self: Self, allocator: std.mem.Allocator, str: []const u8) ![]const
             styles[index] = ';';
             index += 1;
         }
-        const sequence = try b_color.sequence(allocator, true);
-        defer allocator.free(sequence);
-        std.mem.copy(u8, styles[index..], sequence);
-        index += sequence.len;
+        const sequence_len = try b_color.sequence(styles[index..], true);
+        index += sequence_len;
     }
 
     if (self.foreground) |f_color| {
@@ -102,10 +100,8 @@ pub fn print(self: Self, allocator: std.mem.Allocator, str: []const u8) ![]const
             styles[index] = ';';
             index += 1;
         }
-        const sequence = try f_color.sequence(allocator, false);
-        defer allocator.free(sequence);
-        std.mem.copy(u8, styles[index..], sequence);
-        index += sequence.len;
+        const sequence_len = try f_color.sequence(styles[index..], false);
+        index += sequence_len;
     }
 
     if (std.mem.eql(u8, &styles, "")) {
@@ -137,5 +133,5 @@ test "print all styles" {
         .addBackground(.{ .ansi_color = .{ .color = 30 } });
     const printed = try style.print(std.testing.allocator, "Test");
     defer std.testing.allocator.free(printed);
-    try std.testing.expectEqualStrings(printed, "\x1b[1;2;3;4;5;7;9;53;122;92mTest\x1b[0m");
+    try std.testing.expectEqualSlices(u8, printed, "\x1b[1;2;3;4;5;7;9;53;122;92mTest\x1b[0m");
 }

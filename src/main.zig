@@ -1,6 +1,7 @@
 const std = @import("std");
 const Style = @import("Style.zig");
 const colors = @import("colors.zig");
+const screen = @import("screen.zig");
 const Color = colors.Color;
 
 pub fn main() !void {
@@ -87,6 +88,5 @@ pub fn main() !void {
         try stdout.writeAll(color);
     }
     try stdout.writeAll("\n\n");
-
     try bw.flush();
 }
