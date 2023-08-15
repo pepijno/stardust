@@ -23,28 +23,11 @@ const change_scrolling_region = "{d};{d}r";
 const insert_line = "{d}L";
 const delete_line = "{d}M";
 
-/// Mouse
-const enable_mouse_press = "?9h";
-const disable_mouse_press = "?9l";
-const enable_mouse = "?1000h";
-const disable_mouse = "?1000l";
-const enable_mouse_highlight = "?1001h";
-const disable_mouse_highlight = "?1001l";
-const enable_mouse_cell_motion = "?1002h";
-const disable_mouse_cell_motion = "?1002l";
-const enable_mouse_all_motion = "?1003h";
-const disable_mouse_all_motion = "?1003l";
-const enable_mouse_extended_mode = "?1006h";
-const disable_mouse_extended_mode = "?1006l";
-const enable_mouse_pixels_mode = "?1016h";
-const disable_mouse_pixels_mode = "?1016l";
-
 const enable_bracketed_paste = "?2004h";
 const disable_bracketed_paste = "?2004l";
 const start_bracketed_paste = "200~";
 const end_bracketed_paste = "201~";
 
-const set_window_title = "2;{s}";
 const set_foreground_color = "10;{s}";
 const set_background_color = "11;{s}";
 const set_cursor_color = "12;{s}";
@@ -52,8 +35,6 @@ const set_cursor_color = "12;{s}";
 // Screen.
 const restore_screen = "?47l";
 const save_screen = "?47h";
-const alt_screen = "?1049h";
-const exit_alt_screen = "?1049l";
 
 pub fn output(stream: anytype) Output(@TypeOf(stream)) {
     return .{ .tty = stream };
@@ -98,14 +79,6 @@ pub fn Output(comptime Writer: type) type {
 
         pub fn saveScreen(self: *Self) Error!void {
             try self.writer().writeAll(constants.CSI ++ save_screen);
-        }
-
-        pub fn altScreen(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ alt_screen);
-        }
-
-        pub fn exitAltScreen(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ exit_alt_screen);
         }
 
         pub fn clearScreen(self: *Self) Error!void {
@@ -211,68 +184,6 @@ pub fn Output(comptime Writer: type) type {
             const sequence = try std.fmt.bufPrint(&buffer, constants.CSI ++ delete_line, .{n});
             try self.writer().writeAll(sequence);
         }
-
-        pub fn enableMousePress(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ enable_mouse_press);
-        }
-
-        pub fn disableMousePress(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ disable_mouse_press);
-        }
-
-        pub fn enableMouse(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ enable_mouse);
-        }
-
-        pub fn disableMouse(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ disable_mouse);
-        }
-
-        pub fn enableMouseHighlight(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ enable_mouse_highlight);
-        }
-
-        pub fn disableMouseHighlight(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ disable_mouse_highlight);
-        }
-
-        pub fn enableMouseCellMotion(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ enable_mouse_cell_motion);
-        }
-
-        pub fn disableMouseCellMotion(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ disable_mouse_cell_motion);
-        }
-
-        pub fn enableMouseAllMotion(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ enable_mouse_all_motion);
-        }
-
-        pub fn disableMouseAllMotion(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ disable_mouse_all_motion);
-        }
-
-        pub fn enableMouseExtendedMode(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ enable_mouse_extended_mode);
-        }
-
-        pub fn disableMouseExtendedMode(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ disable_mouse_extended_mode);
-        }
-
-        pub fn enableMousePixelsMode(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ enable_mouse_pixels_mode);
-        }
-
-        pub fn disableMousePixelsMode(self: *Self) Error!void {
-            try self.writer().writeAll(constants.CSI ++ disable_mouse_pixels_mode);
-        }
-
-        pub fn setWindowTitle(self: *Self, title: []const u8) Error!void {
-            var buffer = [_]u8{0} ** 1000;
-            const sequence = try std.fmt.bufPrint(&buffer, constants.OSC ++ set_window_title ++ constants.BEL, .{title});
-            try self.writer().writeAll(sequence);
-        }
     };
 }
 
@@ -322,22 +233,6 @@ test "saveScreen" {
     var o = output(fbs.writer());
     try o.saveScreen();
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?47h");
-}
-
-test "altScreen" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.altScreen();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?1049h");
-}
-
-test "exitAltScreen" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.exitAltScreen();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?1049l");
 }
 
 test "clearScreen" {
@@ -490,124 +385,4 @@ test "deleteLines" {
     var o = output(fbs.writer());
     try o.deleteLines(7);
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[7M");
-}
-
-test "enableMousePress" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.enableMousePress();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?9h");
-}
-
-test "disableMousePress" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.disableMousePress();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?9l");
-}
-
-test "enableMouse" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.enableMouse();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?1000h");
-}
-
-test "disableMouse" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.disableMouse();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?1000l");
-}
-
-test "enableMouseHighlight" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.enableMouseHighlight();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?1001h");
-}
-
-test "disableMouseHighlight" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.disableMouseHighlight();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?1001l");
-}
-
-test "enableMouseCellMotion" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.enableMouseCellMotion();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?1002h");
-}
-
-test "disableMouseCellMotion" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.disableMouseCellMotion();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?1002l");
-}
-
-test "enableMouseAllMotion" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.enableMouseAllMotion();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?1003h");
-}
-
-test "disableMouseAllMotion" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.disableMouseAllMotion();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?1003l");
-}
-
-test "enableMouseExtendedMode" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.enableMouseExtendedMode();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?1006h");
-}
-
-test "disableMouseExtendedMode" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.disableMouseExtendedMode();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?1006l");
-}
-
-test "enableMousePixelsMode" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.enableMousePixelsMode();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?1016h");
-}
-
-test "disableMousePixelsMode" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.disableMousePixelsMode();
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?1016l");
-}
-
-test "setWindowTitle" {
-    var buffer: [100]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.setWindowTitle("TestTitle");
-    try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b]2;TestTitle\x07");
 }
