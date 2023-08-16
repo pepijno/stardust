@@ -6,7 +6,6 @@ const hide_cursor = "?25l";
 const show_cursor = "?25h";
 const save_cursor_position = "s";
 const restore_cursor_position = "u";
-
 const cursor_up_one_line = "1A";
 const cursor_up = "{d}A";
 const cursor_down = "{d}B";
@@ -22,33 +21,25 @@ const erase_entire_line = "2K";
 const change_scrolling_region = "{d};{d}r";
 const insert_line = "{d}L";
 const delete_line = "{d}M";
-
-const enable_bracketed_paste = "?2004h";
-const disable_bracketed_paste = "?2004l";
-const start_bracketed_paste = "200~";
-const end_bracketed_paste = "201~";
-
 const set_foreground_color = "10;{s}";
 const set_background_color = "11;{s}";
 const set_cursor_color = "12;{s}";
-
-// Screen.
 const restore_screen = "?47l";
 const save_screen = "?47h";
 
-pub fn output(stream: anytype) Output(@TypeOf(stream)) {
-    return .{ .tty = stream };
+pub fn screen(stream: anytype) Screen(@TypeOf(stream)) {
+    return .{ .stream = stream };
 }
 
-pub fn Output(comptime Writer: type) type {
+pub fn Screen(comptime Writer: type) type {
     const Error = Writer.Error;
     return struct {
         const Self = @This();
 
-        tty: Writer,
+        stream: Writer,
 
         pub fn writer(self: *Self) Writer {
-            return self.tty;
+            return self.stream;
         }
 
         pub fn reset(self: *Self) Error!void {
@@ -190,199 +181,199 @@ pub fn Output(comptime Writer: type) type {
 test "reset" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.reset();
+    var s = screen(fbs.writer());
+    try s.reset();
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[0m");
 }
 
 test "setForegroundColor" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.setForegroundColor(.{ .ansi_color = .{ .color = 20 } });
+    var s = screen(fbs.writer());
+    try s.setForegroundColor(.{ .ansi_color = .{ .color = 20 } });
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b]10;#0000d7\x07");
 }
 
 test "setBackgroundColor" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.setBackgroundColor(.{ .ansi_color = .{ .color = 20 } });
+    var s = screen(fbs.writer());
+    try s.setBackgroundColor(.{ .ansi_color = .{ .color = 20 } });
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b]11;#0000d7\x07");
 }
 
 test "setCursorColor" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.setCursorColor(.{ .ansi_color = .{ .color = 20 } });
+    var s = screen(fbs.writer());
+    try s.setCursorColor(.{ .ansi_color = .{ .color = 20 } });
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b]12;#0000d7\x07");
 }
 
 test "restoreScreen" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.restoreScreen();
+    var s = screen(fbs.writer());
+    try s.restoreScreen();
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?47l");
 }
 
 test "saveScreen" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.saveScreen();
+    var s = screen(fbs.writer());
+    try s.saveScreen();
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?47h");
 }
 
 test "clearScreen" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.clearScreen();
+    var s = screen(fbs.writer());
+    try s.clearScreen();
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[2J\x1b[1;1H");
 }
 
 test "moveCursor" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.moveCursor(4, 5);
+    var s = screen(fbs.writer());
+    try s.moveCursor(4, 5);
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[5;4H");
 }
 
 test "hideCursor" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.hideCursor();
+    var s = screen(fbs.writer());
+    try s.hideCursor();
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?25l");
 }
 
 test "showCursor" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.showCursor();
+    var s = screen(fbs.writer());
+    try s.showCursor();
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[?25h");
 }
 
 test "saveCursorPosition" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.saveCursorPosition();
+    var s = screen(fbs.writer());
+    try s.saveCursorPosition();
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[s");
 }
 
 test "restoreCursorPosition" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.restoreCursorPosition();
+    var s = screen(fbs.writer());
+    try s.restoreCursorPosition();
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[u");
 }
 
 test "cursorUp" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.cursorUp(11);
+    var s = screen(fbs.writer());
+    try s.cursorUp(11);
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[11A");
 }
 
 test "cursorDown" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.cursorDown(11);
+    var s = screen(fbs.writer());
+    try s.cursorDown(11);
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[11B");
 }
 
 test "cursorForward" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.cursorForward(11);
+    var s = screen(fbs.writer());
+    try s.cursorForward(11);
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[11C");
 }
 
 test "cursorBack" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.cursorBack(11);
+    var s = screen(fbs.writer());
+    try s.cursorBack(11);
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[11D");
 }
 
 test "cursorNextLine" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.cursorNextLine(11);
+    var s = screen(fbs.writer());
+    try s.cursorNextLine(11);
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[11E");
 }
 
 test "cursorPrevLine" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.cursorPrevLine(11);
+    var s = screen(fbs.writer());
+    try s.cursorPrevLine(11);
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[11F");
 }
 
 test "clearLine" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.clearLine();
+    var s = screen(fbs.writer());
+    try s.clearLine();
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[2K");
 }
 
 test "clearLineLeft" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.clearLineLeft();
+    var s = screen(fbs.writer());
+    try s.clearLineLeft();
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[1K");
 }
 
 test "clearLineRight" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.clearLineRight();
+    var s = screen(fbs.writer());
+    try s.clearLineRight();
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[0K");
 }
 
 test "clearLines" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.clearLines(5);
+    var s = screen(fbs.writer());
+    try s.clearLines(5);
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[2K\x1b[1A\x1b[2K\x1b[1A\x1b[2K\x1b[1A\x1b[2K\x1b[1A\x1b[2K\x1b[1A\x1b[2K");
 }
 
 test "changeScrollingRegion" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.changeScrollingRegion(5, 7);
+    var s = screen(fbs.writer());
+    try s.changeScrollingRegion(5, 7);
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[5;7r");
 }
 
 test "insertLines" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.insertLines(7);
+    var s = screen(fbs.writer());
+    try s.insertLines(7);
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[7L");
 }
 
 test "deleteLines" {
     var buffer: [100]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
-    var o = output(fbs.writer());
-    try o.deleteLines(7);
+    var s = screen(fbs.writer());
+    try s.deleteLines(7);
     try std.testing.expectEqualSlices(u8, fbs.getWritten(), "\x1b[7M");
 }

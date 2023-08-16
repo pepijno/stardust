@@ -17,7 +17,7 @@ const enable_mouse_pixels_mode = "?1016h";
 const disable_mouse_pixels_mode = "?1016l";
 
 pub fn mouse(stream: anytype) Mouse(@TypeOf(stream)) {
-    return .{ .tty = stream };
+    return .{ .stream = stream };
 }
 
 pub fn Mouse(comptime Writer: type) type {
@@ -25,10 +25,10 @@ pub fn Mouse(comptime Writer: type) type {
     return struct {
         const Self = @This();
 
-        tty: Writer,
+        stream: Writer,
 
         pub fn writer(self: *Self) Writer {
-            return self.tty;
+            return self.stream;
         }
 
         pub fn enableMousePress(self: *Self) Error!void {

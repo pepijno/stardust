@@ -11,7 +11,7 @@ const begin_sychronized_update = "?2026h";
 const end_sychronized_update = "?2026l";
 
 pub fn terminal(stream: anytype) Terminal(@TypeOf(stream)) {
-    return .{ .tty = stream };
+    return .{ .stream = stream };
 }
 
 pub fn Terminal(comptime Writer: type) type {
@@ -19,10 +19,10 @@ pub fn Terminal(comptime Writer: type) type {
     return struct {
         const Self = @This();
 
-        tty: Writer,
+        stream: Writer,
 
         pub fn writer(self: *Self) Writer {
-            return self.tty;
+            return self.stream;
         }
 
         pub fn enableLineWrap(self: *Self) Error!void {
